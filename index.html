@@ -32,9 +32,12 @@
         }
 
         function generateCSV() {
-          var cards = _.map(deck, function (card) { return card.question + "," + card.answer })
+          var cards = _.map(deck, function (card) { return encodeCommas(card.question) + "," + encodeCommas(card.answer) })
           $scope.csv = _.reduce(cards, function (cards, card) { return cards + "," + card; })
-          console.log($scope.csv)
+		  
+		  function encodeCommas(value) {
+			return value.replace(',', '%2C')
+		  }
         }
       }]);
   </script>
