@@ -1,0 +1,68 @@
+<html>
+<head>
+  <title>Anki Deck Builder</title>
+  <script type="text/javascript" src="bower_components/tinymce/tinymce.min.js"></script>
+  <script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
+  <script type="text/javascript" src="bower_components/angular-ui-tinymce/src/tinymce.js"></script>
+  <script src="bower_components/underscore/underscore-min.js"></script>
+  <script>
+    angular.module('ankiDeckBuilder', ['ui.tinymce']);
+  </script>
+  <script>
+    angular.module('ankiDeckBuilder').controller('deckBuilder',
+      ['$scope',
+      function ($scope) {
+        var deck = [{
+          question: "This is a question",
+          answer: "This is an answer"
+        }];
+        $scope.add = addCard;
+        $scope.delete = deleteCard;
+        $scope.generateCSV = generateCSV;
+        $scope.deck = deck
+        
+        function addCard() {
+          deck.push({});
+        }
+
+        function deleteCard(index) {
+          var cardToDelete = deck[index];
+          if(confirm("Are you sure you want to delete the card '" + cardToDelete.question +"'?"))
+            deck.splice(index, 1)
+        }
+
+        function generateCSV() {
+          var cards = _.map(deck, function (card) { return card.question + "," + card.answer })
+          $scope.csv = _.reduce(cards, function (cards, card) { return cards + "," + card; })
+          console.log($scope.csv)
+        }
+      }]);
+  </script>
+</head>
+<body ng-app="ankiDeckBuilder" ng-controller="deckBuilder">
+  <table>
+    <thead>
+      <tr>
+        <th>Question</th>
+        <th>Answer</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="card in deck">
+        <td><textarea ui-tinymce ng-model="card.question"></textarea></td>
+        <td><textarea ui-tinymce ng-model="card.answer"></textarea></td>
+        <td ng-click="delete($index)">Delete</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3" ng-click="add()"><a>Add</a></td>
+      </tr>
+    </tfoot>
+  </table>
+  <hr />
+  <button ng-click="generateCSV()">Get CSV</button>
+  <div>{{csv}}</div>
+</body>
+</html>
