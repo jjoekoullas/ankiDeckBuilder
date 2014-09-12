@@ -4,9 +4,15 @@
   <script type="text/javascript" src="bower_components/tinymce/tinymce.min.js"></script>
   <script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
   <script type="text/javascript" src="bower_components/angular-ui-tinymce/src/tinymce.js"></script>
+  <script src="js/Blob.js"></script>
+  <script src="js/FileSaver.js"></script>
   <script src="bower_components/underscore/underscore-min.js"></script>
   <script>
-    angular.module('ankiDeckBuilder', ['ui.tinymce']);
+    angular.module('ankiDeckBuilder', ['ui.tinymce'])
+	  .config(['$compileProvider',
+	  function($compileProvider) {
+		$compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|blob):/)
+	  }]);
   </script>
   <script>
     angular.module('ankiDeckBuilder').controller('deckBuilder',
@@ -18,7 +24,7 @@
         }];
         $scope.add = addCard;
         $scope.delete = deleteCard;
-        $scope.generateCSV = generateCSV;
+		$scope.downloadCSVBlob = downloadCSVBlob;
         $scope.deck = deck
         
         function addCard() {
@@ -30,15 +36,17 @@
           if(confirm("Are you sure you want to delete the card '" + cardToDelete.question +"'?"))
             deck.splice(index, 1)
         }
-
-        function generateCSV() {
-          var cards = _.map(deck, function (card) { return encodeCommas(card.question) + "," + encodeCommas(card.answer) })
-          $scope.csv = _.reduce(cards, function (cards, card) { return cards + "," + card; })
+		
+		function downloadCSVBlob() {
+		  var cards = _.map(deck, function (card) { return encodeCommas(card.question) + "," + encodeCommas(card.answer) })
+          var csv = _.reduce(cards, function (cards, card) { return cards + "," + card; })
+		  var blob = new Blob([csv], {type: 'text/csv'});
+		  saveAs(blob, "deck.csv");
 		  
 		  function encodeCommas(value) {
 			return value.replace(',', '%2C')
 		  }
-        }
+		}
       }]);
   </script>
 </head>
@@ -60,12 +68,11 @@
     </tbody>
     <tfoot>
       <tr>
-        <td colspan="3" ng-click="add()"><a>Add</a></td>
+        <td colspan="3"><button ng-click="add()">Add</button></td>
       </tr>
     </tfoot>
   </table>
   <hr />
-  <button ng-click="generateCSV()">Get CSV</button>
-  <div>{{csv}}</div>
+  <button ng-click="downloadCSVBlob()">Download deck</button>
 </body>
 </html>
