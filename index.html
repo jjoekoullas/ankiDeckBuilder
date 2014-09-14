@@ -57,7 +57,7 @@
 		
 		function downloadCSVBlob() {
 		  var cards = _.map(deck, function (card) { return encodeCommas(card.question) + "," + encodeCommas(card.answer) })
-          var csv = _.reduce(cards, function (cards, card) { return cards + "," + card; })
+          var csv = _.reduce(cards, function (cards, card) { return cards + "\r\n" + card; })
 		  var blob = new Blob([csv], {type: 'text/csv'});
 		  saveAs(blob, "deck.csv");
 		  
