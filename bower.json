@@ -1,0 +1,26 @@
+{
+  "name": "ankiDeckBuilder",
+  "version": "0.1",
+  "homepage": "https://github.com/jjoedouglas/ankiDeckBuilder",
+  "authors": [
+    "J. Joe Douglas <j.joe.douglas@gmail.com>"
+  ],
+  "description": "Build decks for Anki completely in the browser",
+  "main": "index.html",
+  "keywords": [
+    "Anki"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-ui-tinymce": "https://github.com/angular-ui/ui-tinymce.git#master",
+    "mgo-mousetrap": "https://github.com/mgonto/mgo-mousetrap.git#~0.1.2",
+    "underscore": "~1.7.0"
+  }
+}

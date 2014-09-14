@@ -4,11 +4,13 @@
   <script type="text/javascript" src="bower_components/tinymce/tinymce.min.js"></script>
   <script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
   <script type="text/javascript" src="bower_components/angular-ui-tinymce/src/tinymce.js"></script>
+  <script src="bower_components/mgo-mousetrap/mousetrap.js"></script>
+  <script src="bower_components/mgo-mousetrap/wMousetrap.js"></script>
   <script src="js/Blob.js"></script>
   <script src="js/FileSaver.js"></script>
   <script src="bower_components/underscore/underscore-min.js"></script>
   <script>
-    angular.module('ankiDeckBuilder', ['ui.tinymce'])
+    angular.module('ankiDeckBuilder', ['ui.tinymce', 'mgo-mousetrap'])
 	  .config(['$compileProvider',
 	  function($compileProvider) {
 		$compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|blob):/)
@@ -26,10 +28,26 @@
         $scope.delete = deleteCard;
 		$scope.downloadCSVBlob = downloadCSVBlob;
         $scope.deck = deck
+		var addFromEditor = {
+			setup: setupToAddFromEditor
+		}
+		$scope.addFromEditor = addFromEditor;
+		$scope.focusOnInit = angular.extend({
+			init_instance_callback: focusOnInit
+		}, addFromEditor);
         
         function addCard() {
           deck.push({});
         }
+		
+		function setupToAddFromEditor(editor) {
+			editor.on('keyup', function(e) {
+				if(e.altKey && e.keyCode == 34) {
+					addCard();
+					$scope.$apply();
+				}
+			});
+		}
 
         function deleteCard(index) {
           var cardToDelete = deck[index];
@@ -47,10 +65,15 @@
 			return value.replace(',', '%2C')
 		  }
 		}
+		
+		function focusOnInit(tinyMceInstance) {
+			tinyMceInstance.focus();
+		}
       }]);
   </script>
+  
 </head>
-<body ng-app="ankiDeckBuilder" ng-controller="deckBuilder">
+<body ng-app="ankiDeckBuilder" ng-controller="deckBuilder" w-mousetrap="{'alt+pagedown': add}">
   <table>
     <thead>
       <tr>
@@ -61,9 +84,9 @@
     </thead>
     <tbody>
       <tr ng-repeat="card in deck">
-        <td><textarea ui-tinymce ng-model="card.question"></textarea></td>
-        <td><textarea ui-tinymce ng-model="card.answer"></textarea></td>
-        <td ng-click="delete($index)">Delete</td>
+        <td><textarea class="mousetrap" ui-tinymce="focusOnInit" ng-model="card.question"></textarea></td>
+        <td><textarea class="mousetrap" ui-tinymce="addFromEditor" ng-model="card.answer"></textarea></td>
+        <td><button ng-click="delete($index)">Delete</button></td>
       </tr>
     </tbody>
     <tfoot>
