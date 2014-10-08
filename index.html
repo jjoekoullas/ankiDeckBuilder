@@ -6,11 +6,12 @@
   <script type="text/javascript" src="bower_components/angular-ui-tinymce/src/tinymce.js"></script>
   <script src="bower_components/mgo-mousetrap/mousetrap.js"></script>
   <script src="bower_components/mgo-mousetrap/wMousetrap.js"></script>
+  <script src="bower_components/angular-file-upload/dist/angular-file-upload.min.js"></script>
   <script src="js/Blob.js"></script>
   <script src="js/FileSaver.js"></script>
   <script src="bower_components/underscore/underscore-min.js"></script>
   <script>
-    angular.module('ankiDeckBuilder', ['ui.tinymce', 'mgo-mousetrap'])
+    angular.module('ankiDeckBuilder', ['ui.tinymce', 'mgo-mousetrap', 'angularFileUpload'])
 	  .config(['$compileProvider',
 	  function($compileProvider) {
 		$compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|blob):/)
@@ -18,8 +19,8 @@
   </script>
   <script>
     angular.module('ankiDeckBuilder').controller('deckBuilder',
-      ['$scope',
-      function ($scope) {
+      ['$scope', '$timeout',
+      function ($scope, $timeout) {
         var deck = [{
           question: "This is a question",
           answer: "This is an answer"
@@ -35,7 +36,29 @@
 		$scope.focusOnInit = angular.extend({
 			init_instance_callback: focusOnInit
 		}, addFromEditor);
-        
+        $scope.onFileSelect = onFileSelect;
+		
+		
+		function onFileSelect(files) {
+			var reader = new FileReader();
+			reader.onload = function(readEvent) {
+				$timeout(
+					function() {
+						var lines = readEvent.currentTarget.result.trim().split("\n");
+						$scope.deck = deck = _.map(lines,
+							function(line) {
+								var questionAndAnswer = line.split("\t");
+								return {
+									question: questionAndAnswer[0],
+									answer: questionAndAnswer[1]
+								};
+							})
+					}
+				);
+			}
+			
+			reader.readAsText(files[0]);
+		}
         function addCard() {
           deck.push({});
         }
@@ -56,14 +79,25 @@
         }
 		
 		function downloadCSVBlob() {
-		  var cards = _.map(deck, function (card) { return encodeCommas(card.question) + "," + encodeCommas(card.answer) })
+		  var lineFeedEncoding = encoding('\n', '');
+		  var carriageReturnEncoding = encoding('\r', '');
+		  var commaEncoding = encoding(',', '%2C');
+		  
+		  var cards = _.map(deck, function (card) { return encode(card.question) + "," + encode(card.answer) })
           var csv = _.reduce(cards, function (cards, card) { return cards + "\r\n" + card; })
 		  var blob = new Blob([csv], {type: 'text/csv'});
 		  saveAs(blob, "deck.csv");
 		  
-		  function encodeCommas(value) {
-			return value.replace(',', '%2C')
-		  }
+		  
+		  function encoding(toEncode, toEncodeAs) {
+			return function (value) {
+				return value.replace(new RegExp(toEncode, "g"), toEncodeAs);
+			}
+		  };
+		  function encode(value) {
+			var encoded = lineFeedEncoding(carriageReturnEncoding(commaEncoding(value)));
+			return encoded
+		  };
 		}
 		
 		function focusOnInit(tinyMceInstance) {
@@ -97,5 +131,9 @@
   </table>
   <hr />
   <button ng-click="downloadCSVBlob()">Download deck</button>
+  <div>
+	<label for="fileUpload">Load deck:</label>
+	<input type="file" id="fileUpload" ng-file-select="onFileSelect($files)" />
+  </div>
 </body>
 </html>
