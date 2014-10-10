@@ -19,7 +19,7 @@
     "tests"
   ],
   "dependencies": {
-    "angular-ui-tinymce": "https://github.com/angular-ui/ui-tinymce.git#master",
+    "angular-ui-tinymce": "https://github.com/jjoedouglas/ui-tinymce.git#localMaster",
     "mgo-mousetrap": "https://github.com/mgonto/mgo-mousetrap.git#~0.1.2",
     "underscore": "~1.7.0"
   }
