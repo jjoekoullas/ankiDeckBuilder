@@ -21,6 +21,14 @@
   "dependencies": {
     "angular-ui-tinymce": "https://github.com/jjoedouglas/ui-tinymce.git#localMaster",
     "mgo-mousetrap": "https://github.com/mgonto/mgo-mousetrap.git#~0.1.2",
-    "underscore": "~1.7.0"
+    "underscore": "~1.7.0",
+    "ng-file-upload": "~1.6.12",
+    "angular": "~1.2.26",
+    "tinymce": "~4.1.6",
+    "Blob.js": "https://github.com/eligrey/Blob.js.git",
+    "FileSaver.js": "https://github.com/eligrey/FileSaver.js.git"
+  },
+  "resolutions": {
+    "tinymce": "4.0.22"
   }
 }

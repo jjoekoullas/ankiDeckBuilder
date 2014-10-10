@@ -1,15 +1,15 @@
 <html>
 <head>
   <title>Anki Deck Builder</title>
-  <script type="text/javascript" src="bower_components/tinymce/tinymce.min.js"></script>
-  <script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
-  <script type="text/javascript" src="bower_components/angular-ui-tinymce/src/tinymce.js"></script>
+  <script src="bower_components/tinymce/tinymce.min.js"></script>
+  <script src="bower_components/angular/angular.min.js"></script>
+  <script src="bower_components/angular-ui-tinymce/src/tinymce.js"></script>
   <script src="bower_components/mgo-mousetrap/mousetrap.js"></script>
   <script src="bower_components/mgo-mousetrap/wMousetrap.js"></script>
-  <script src="bower_components/angular-file-upload/dist/angular-file-upload.min.js"></script>
-  <script src="js/Blob.js"></script>
-  <script src="js/FileSaver.js"></script>
+  <script src="bower_components/ng-file-upload/angular-file-upload.min.js"></script>
   <script src="bower_components/underscore/underscore-min.js"></script>
+  <script src="bower_components/Blob.js/Blob.js"></script>
+  <script src="bower_components/FileSaver.js/FileSaver.min.js"></script>
   <script>
     angular.module('ankiDeckBuilder', ['ui.tinymce', 'mgo-mousetrap', 'angularFileUpload'])
 	  .config(['$compileProvider',
