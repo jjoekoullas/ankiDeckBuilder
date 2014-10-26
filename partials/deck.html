@@ -1,0 +1,27 @@
+<table>
+  <thead>
+    <tr>
+	  <th>Question</th>
+	  <th>Answer</th>
+	  <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="card in deck">
+	  <td><textarea class="mousetrap" ui-tinymce="focusOnInit" ng-model="card.question"></textarea></td>
+	  <td><textarea class="mousetrap" ui-tinymce="addFromEditor" ng-model="card.answer"></textarea></td>
+    	<td><button ng-click="delete($index)">Delete</button></td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+	  <td colspan="3"><button ng-click="add()">Add</button></td>
+	</tr>
+  </tfoot>
+</table>
+<hr />
+<button ng-click="downloadCSVBlob()">Download deck</button>
+<div>
+  <label for="fileUpload">Load deck:</label>
+  <input type="file" id="fileUpload" ng-file-select="onFileSelect($files)" />
+</div>

@@ -3,6 +3,7 @@
   <title>Anki Deck Builder</title>
   <script src="bower_components/tinymce/tinymce.min.js"></script>
   <script src="bower_components/angular/angular.min.js"></script>
+  <script src="bower_components/angular-route/angular-route.min.js"></script>
   <script src="bower_components/angular-ui-tinymce/src/tinymce.js"></script>
   <script src="bower_components/mgo-mousetrap/mousetrap.js"></script>
   <script src="bower_components/mgo-mousetrap/wMousetrap.js"></script>
@@ -10,25 +11,73 @@
   <script src="bower_components/underscore/underscore-min.js"></script>
   <script src="bower_components/Blob.js/Blob.js"></script>
   <script src="bower_components/FileSaver.js/FileSaver.min.js"></script>
+  <script src="bower_components/angular-local-storage/dist/angular-local-storage.min.js"></script>
   <script>
-    angular.module('ankiDeckBuilder', ['ui.tinymce', 'mgo-mousetrap', 'angularFileUpload'])
-	  .config(['$compileProvider',
-	  function($compileProvider) {
-		$compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|blob):/)
+    angular.module('ankiDeckBuilder', ['ui.tinymce', 'mgo-mousetrap', 'angularFileUpload', 'LocalStorageModule', 'ngRoute'])
+	  .config(['$compileProvider', 'localStorageServiceProvider', '$routeProvider',
+	  function($compileProvider, localStorageServiceProvider, $routeProvider) {
+		$compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|blob):/);
+		
+		localStorageServiceProvider.setPrefix('ankiDeckBuilder');
+		
+		$routeProvider.when('/deck/:deck', {
+			templateUrl: 'partials/deck.html',
+			controller: 'deckBuilder'
+		}).when('/decks', {
+			templateUrl: 'partials/decks.html',
+			controller: 'decksController'
+		}).otherwise({
+			redirectTo: '/decks'
+		});
 	  }]);
   </script>
   <script>
+	angular.module('ankiDeckBuilder').factory('deckStorage', ['localStorageService',
+		function(localStorageService) {
+			return {
+				get: function(deckName) {
+					return localStorageService.get(deckName);
+				},
+				set: function(deckName, deck) {
+					return localStorageService.set(deckName, deck);
+				},
+				decks: function() {
+					return localStorageService.keys();
+				},
+				bind: function(scope, scopePropertyName, deckName) {
+					return localStorageService.bind(scope, scopePropertyName, undefined, deckName);
+				}
+			}
+		}]);
+  </script>
+  <script>
+	angular.module('ankiDeckBuilder').controller('decksController', ['$scope', 'deckStorage', '$location',
+		function($scope, deckStorage, $location) {
+			$scope.decks = deckStorage.decks();
+			$scope.createDeck = function() {
+				var deckName = prompt('Deck name: ');
+				if(deckName === "")
+					alert('Deck cannot have an empty name');
+				else if(_.contains($scope.decks, deckName))
+					alert('The name ' + deckName + ' is already in use.');
+				else if (!!deckName) {
+					deckStorage.set(deckName, [{}]);
+					$location.path('/deck/' + deckName);
+				}
+			}
+		}
+	]);
+  </script>
+  <script>
     angular.module('ankiDeckBuilder').controller('deckBuilder',
-      ['$scope', '$timeout',
-      function ($scope, $timeout) {
-        var deck = [{
-          question: "This is a question",
-          answer: "This is an answer"
-        }];
+      ['$scope', '$timeout', '$routeParams', 'deckStorage',
+      function ($scope, $timeout, $routeParams, deckStorage) {
         $scope.add = addCard;
         $scope.delete = deleteCard;
 		$scope.downloadCSVBlob = downloadCSVBlob;
-        $scope.deck = deck
+        $scope.deck = deckStorage.get($routeParams.deck);
+		deckStorage.bind($scope, 'deck', $routeParams.deck);
+		
 		var addFromEditor = {
 			setup: setupToAddFromEditor
 		}
@@ -38,14 +87,13 @@
 		}, addFromEditor);
         $scope.onFileSelect = onFileSelect;
 		
-		
 		function onFileSelect(files) {
 			var reader = new FileReader();
 			reader.onload = function(readEvent) {
 				$timeout(
 					function() {
 						var lines = readEvent.currentTarget.result.trim().split("\n");
-						$scope.deck = deck = _.map(lines,
+						$scope.deck = _.map(lines,
 							function(line) {
 								var questionAndAnswer = line.split("\t");
 								return {
@@ -60,7 +108,7 @@
 			reader.readAsText(files[0]);
 		}
         function addCard() {
-          deck.push({});
+          $scope.deck.push({});
         }
 		
 		function setupToAddFromEditor(editor) {
@@ -73,9 +121,9 @@
 		}
 
         function deleteCard(index) {
-          var cardToDelete = deck[index];
+          var cardToDelete = $scope.deck[index];
           if(confirm("Are you sure you want to delete the card '" + cardToDelete.question +"'?"))
-            deck.splice(index, 1)
+            $scope.deck.splice(index, 1)
         }
 		
 		function downloadCSVBlob() {
@@ -83,10 +131,10 @@
 		  var carriageReturnEncoding = encoding('\r', '');
 		  var commaEncoding = encoding(',', '%2C');
 		  
-		  var cards = _.map(deck, function (card) { return encode(card.question) + "," + encode(card.answer) })
+		  var cards = _.map($scope.deck, function (card) { return encode(card.question) + "," + encode(card.answer) })
           var csv = _.reduce(cards, function (cards, card) { return cards + "\r\n" + card; })
 		  var blob = new Blob([csv], {type: 'text/csv'});
-		  saveAs(blob, "deck.csv");
+		  saveAs(blob, $routeParams.deck + ".csv");
 		  
 		  
 		  function encoding(toEncode, toEncodeAs) {
@@ -108,32 +156,7 @@
   
 </head>
 <body ng-app="ankiDeckBuilder" ng-controller="deckBuilder" w-mousetrap="{'alt+pagedown': add}">
-  <table>
-    <thead>
-      <tr>
-        <th>Question</th>
-        <th>Answer</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr ng-repeat="card in deck">
-        <td><textarea class="mousetrap" ui-tinymce="focusOnInit" ng-model="card.question"></textarea></td>
-        <td><textarea class="mousetrap" ui-tinymce="addFromEditor" ng-model="card.answer"></textarea></td>
-        <td><button ng-click="delete($index)">Delete</button></td>
-      </tr>
-    </tbody>
-    <tfoot>
-      <tr>
-        <td colspan="3"><button ng-click="add()">Add</button></td>
-      </tr>
-    </tfoot>
-  </table>
-  <hr />
-  <button ng-click="downloadCSVBlob()">Download deck</button>
-  <div>
-	<label for="fileUpload">Load deck:</label>
-	<input type="file" id="fileUpload" ng-file-select="onFileSelect($files)" />
+  <div ng-view>
   </div>
 </body>
 </html>
